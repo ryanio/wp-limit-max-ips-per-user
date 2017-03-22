@@ -1,29 +1,3 @@
-<style>
- h2 {
-    margin-top: 40px;
-}
-
-form h2 {
-    margin-top: 0;
-}
-
-p.submit:first-of-type {
-    padding: 0;
-    margin: 0;
-}
-
-.clear-login-records {
-    margin-bottom: 20px;
-}
-
-.clear-login-records p.submit {
-    margin-top: 0;
-    margin-bottom: 0;
-    padding-top: 0;
-    padding-bottom: 15px;
-}
-</style>
-
 <div class="wrap">
     <h1>Limit Max IPs Per User</h1>
 
@@ -80,17 +54,6 @@ p.submit:first-of-type {
             <em>Note: This deletes all recorded IP history and allows everyone to log in again.</em>
         </form>
     </div>
-
-    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">
-    <script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
-
-    <script>
-        jQuery(document).ready(function() {
-            jQuery('#log').DataTable({
-                'order': [0, 'dsc']
-            });
-        });
-    </script>
 
     <h2>Support</h2>
     <p>This plugin is made by Ryan Ghods, you may email him for support inquiries at <a href="mailto:ryan@ryanio.com">ryan@ryanio.com</a>.</p>

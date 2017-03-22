@@ -1,0 +1,23 @@
+ h2 {
+    margin-top: 40px;
+}
+
+form h2 {
+    margin-top: 0;
+}
+
+p.submit:first-of-type {
+    padding: 0;
+    margin: 0;
+}
+
+.clear-login-records {
+    margin-bottom: 20px;
+}
+
+.clear-login-records p.submit {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 15px;
+}

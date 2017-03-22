@@ -1,16 +1,3 @@
-<style>
-.limit-max-ips-per-user .notice {
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
- .limit-max-ips-per-user .button {
-    margin-top: 10px;
-    margin-bottom: 3px;
-}
-
-</style>
-
 <table class="form-table">
     <tbody>
         <tr class="limit-max-ips-per-user">
@@ -52,22 +39,3 @@
         </tr>
     </tbody>
 </table>
-
-<script>
-jQuery('button#delete-ip-records').on('click', function(event) {
-    jQuery.post(ajaxurl, {
-            'action': 'delete_user_ip_records',
-            '_ajax_nonce': '<?php echo(wp_create_nonce($this->delete_records_action_name)); ?>',
-            'user_id': '<?php echo($user->ID); ?>'
-        }, 
-        function(response) {
-            if (response == 200) {
-                jQuery('#limit-max-ips-per-user-ajax-response').html('<div class="notice notice-success inline"><p><strong>Success:</strong> User\'s IP records deleted</p></div>');
-                jQuery('button#delete-ip-records').hide();
-            } else {
-                jQuery('#limit-max-ips-per-user-ajax-response').html('<div class="notice notice-error inline"><p><strong>Error:</strong> Something went wrong deleting the user\'s IP records</p></div>');
-
-            }
-        });
-});
-</script>

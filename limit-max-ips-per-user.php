@@ -52,6 +52,7 @@ final class LimitMaxIPsPerUser {
         add_action('wp_ajax_delete_user_ip_records', array($this, 'wp_ajax_delete_user_ip_records'));
         add_action("admin_post_{$this->delete_records_action_name}", array($this, 'admin_post_delete_records'));
         add_action('admin_notices', array($this, 'admin_notices'));
+        add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
 
         // Initialize scheduled events (when someone visits site in front-end)
         add_action('wp', array($this, 'schedule_events'));
@@ -61,7 +62,6 @@ final class LimitMaxIPsPerUser {
         add_filter('login_message', array($this, 'user_login_message'));
         add_filter('manage_users_columns', array($this, 'manage_users_columns'));
         add_filter('manage_users_custom_column', array($this, 'manage_users_custom_column'), 10, 3);
-        add_filter('manage_users_column_css', array($this, 'manage_users_column_css'));
 
         // Check if db needs to be upgraded after plugin update was completed
         add_action('plugins_loaded', array($this, 'update_db_check') );
@@ -266,7 +266,7 @@ final class LimitMaxIPsPerUser {
     }
 
     function add_admin_menus() {
-        add_options_page('Limit Max IPs Per User', 'Limit Max IPs Per User', 'manage_options', $this->menu_slug, array($this, 'limit_max_ips_per_user_settings_page_html'));
+        add_options_page('Limit Max IPs Per User', 'Limit Max IPs Per User', 'manage_options', $this->menu_slug, array($this, 'limit_max_ips_per_user_settings_page'));
     }
 
     function limit_max_ips_per_user_callback($args) {
@@ -329,11 +329,33 @@ final class LimitMaxIPsPerUser {
 
     /**
     *
+    * Enqueue scripts
+    *
+    */
+
+    function admin_enqueue_scripts($hook) {
+        if ($hook == "settings_page_limit_max_ips_per_user") {
+            wp_enqueue_style('wp_admin_settings_css', plugins_url('includes/pages/settings/settings.css', __FILE__));
+            wp_enqueue_script('wp_admin_settings_js', plugins_url('includes/pages/settings/settings.js', __FILE__));
+
+            // dataTables
+            wp_enqueue_style('wp_admin_datatables_css', plugins_url('includes/jquery.dataTables/css/jquery.dataTables.min.css', __FILE__));
+            wp_enqueue_script('wp_admin_datatables_jss', plugins_url('includes/jquery.dataTables/js/jquery.dataTables.min.js', __FILE__));
+
+        } else if ($hook == 'user-edit.php') {
+            wp_enqueue_style('wp_admin_user_edit_css', plugins_url('includes/pages/user-edit/user-edit.css', __FILE__));
+            wp_enqueue_script('wp_admin_user_edit_js', plugins_url('includes/pages/user-edit/user-edit.js', __FILE__));
+            add_action('admin_print_scripts', array($this, 'user_edit_inline_js'));
+        }
+    }
+
+    /**
+    *
     * Settings page HTML
     *
     */
 
-    function limit_max_ips_per_user_settings_page_html() {
+    function limit_max_ips_per_user_settings_page() {
        // Check user capabilities
         if (!current_user_can('manage_options')) {
             wp_die('You do not have sufficient permissions to access this page.');
@@ -341,7 +363,7 @@ final class LimitMaxIPsPerUser {
 
         $log = $this->get_log();
 
-        include('includes/settings-page-html.php');
+        include('includes/pages/settings/settings.php');
     }
 
     /**
@@ -588,7 +610,14 @@ final class LimitMaxIPsPerUser {
             $blocked_status_string = "<span style='color: green;'>Not blocked</span>";
         }
 
-        include('includes/edit-user-profile-html.php');
+        include('includes/pages/user-edit/user-edit.php');
+    }
+
+    function user_edit_inline_js() {
+        echo "<script type='text/javascript'>";
+        echo "var user_id = " . $_GET['user_id'] . ";";
+        echo "var _ajax_nonce = '" . wp_create_nonce($this->delete_records_action_name) . "';";
+        echo "</script>";
     }
 
     function wp_ajax_delete_user_ip_records() {
@@ -633,10 +662,6 @@ final class LimitMaxIPsPerUser {
 
             return $count;
         }
-    }
-
-    function manage_users_css() {
-        echo '<style type="text/css">.column-limit_max_ips_per_user_unique_ip_count { width: 80px; }</style>';
     }
 }
 
