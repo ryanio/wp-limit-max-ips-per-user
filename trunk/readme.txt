@@ -29,7 +29,7 @@ Features:
 == Frequently Asked Questions ==
 
 1. **What versions of WordPress, PHP and MySQL does this plugin support?**
-    This plugin was developed and tested on **WordPress 4.7.3**, **PHP 5.6.27** and **MySQL 5.6.33, so those are our recommended minimum supported versions.
+    This plugin was developed and tested on **WordPress 4.7.3**, **PHP 5.6.27** and **MySQL 5.6.33**, so those are our recommended minimum supported versions.
 
     We cannot promise that this plugin will work on older versions of Wordpress, PHP or MySQL, but we try to use best practices in our code to support the most common production environments used today.
 
