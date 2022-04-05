@@ -3,7 +3,7 @@ Contributors: ralxz
 Donate link: https://www.paypal.me/ryanghods
 Tags: limit, IPs, max, user, security, membership, restrict
 Requires at least: 4.6
-Tested up to: 4.7.3
+Tested up to: 5.9.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -18,6 +18,7 @@ Features:
 * Set the maximum number of IPs and the number of days.
 * See user login logs and whether their login was blocked or not.
 * Reset a specific user's IP history via the `Edit User` page.
+* Enable admin or user email notifications when limit exceeded.
 
 == Installation ==
 
@@ -41,10 +42,22 @@ Features:
 
 == Changelog ==
 
+= 1.2 =
+* New feature: enable admin or user email notifications when limit exceeded.
+
+= 1.1 =
+* Fixes "Clear User's Recorded IPs" button on latest WordPress versions by replacing the deprecated use of jQuery.live('click', ...) with jQuery.on('click', ...)
+
 = 1.0 =
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.2=
+* New feature: enable admin and user email notifications when limit exceeded.
+
+= 1.1 =
+* Bug fix release
 
 = 1.0 =
 * Initial release

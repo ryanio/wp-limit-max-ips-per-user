@@ -3,7 +3,7 @@
  * Plugin Name: Limit Max IPs Per User
  * Plugin URI:  https://github.com/ryanio/wp-limit-max-ips-per-user
  * Description: Limit the maximum number of IPs that a user can log in with.
- * Version:     1.0
+ * Version:     1.2
  * Author:      Ryan Ghods
  * Author URI:  https://ryanio.com 
  * License:     GPL2
@@ -26,6 +26,8 @@ final class LimitMaxIPsPerUser {
     public static $db_ver_option_key = 'limit_max_ips_per_user_db_ver';
     public static $max_ips_option_key = 'limit_max_ips_per_user_max_ips';
     public static $number_of_days_option_key = 'limit_max_ips_per_user_number_of_days';
+    public static $email_admin_key = 'limit_max_ips_per_user_email_admin';
+    public static $email_user_key = 'limit_max_ips_per_user_email_user';
     public static $truncate_records_scheduled_hook_key = 'limit_max_ips_per_user_truncate_records';
 
     public static $default_max_ips_value = 10;
@@ -119,6 +121,8 @@ final class LimitMaxIPsPerUser {
         delete_option(self::$db_ver_option_key);
         delete_option(self::$max_ips_option_key);
         delete_option(self::$number_of_days_option_key);
+        delete_option(self::$email_admin_key);
+        delete_option(self::$email_user_key);
     }
 
     public static function unschedule_events() {
@@ -250,6 +254,8 @@ final class LimitMaxIPsPerUser {
         // Register setting fields
         add_settings_field('limit_max_ips_per_user_max_ips', 'Maximum IPs per user', array($this, 'field_number_max_ips'), 'limit_max_ips_per_user_settings', 'limit_max_ips_per_user_section');
         add_settings_field('limit_max_ips_per_user_number_of_days', 'Number of days for IP limit', array($this, 'field_number_of_days'), 'limit_max_ips_per_user_settings', 'limit_max_ips_per_user_section');
+        add_settings_field('limit_max_ips_per_user_email_admin', 'Email Admin', array($this, 'email_admin'), 'limit_max_ips_per_user_settings', 'limit_max_ips_per_user_section');
+        add_settings_field('limit_max_ips_per_user_email_user', 'Email User', array($this, 'email_user'), 'limit_max_ips_per_user_settings', 'limit_max_ips_per_user_section');
 
         // Register new settings
         register_setting('limit_max_ips_per_user_settings', 'limit_max_ips_per_user_max_ips',
@@ -257,12 +263,13 @@ final class LimitMaxIPsPerUser {
                 'type' => 'intval',
                 'sanitize_callback' => array($this, 'limit_max_ips_per_user_max_ips_validate')
             ));
-
         register_setting('limit_max_ips_per_user_settings', 'limit_max_ips_per_user_number_of_days',
             array(
                 'type' => 'intval',
                 'sanitize_callback' => array($this, 'limit_max_ips_per_user_number_of_days_validate')
             ));
+        register_setting('limit_max_ips_per_user_settings', 'limit_max_ips_per_user_email_admin');
+        register_setting('limit_max_ips_per_user_settings', 'limit_max_ips_per_user_email_user');
     }
 
     function add_admin_menus() {
@@ -314,7 +321,6 @@ final class LimitMaxIPsPerUser {
     function field_number_of_days() {
         $number_of_days = get_option(LimitMaxIPsPerUser::$number_of_days_option_key);
 
-        $output = "";
         $output = "<input type=\"number\" id=\"limit_max_ips_per_user_number_of_days\" name=\"limit_max_ips_per_user_number_of_days\" value=\"{$number_of_days}\" class=\"limit-max-ips-per-user\" /> days";
         $output .= "<p><small><em>The login log below will be truncated to this amount of days to keep the database small and fast.</em></small></p>";
 
@@ -325,6 +331,26 @@ final class LimitMaxIPsPerUser {
         }
 
         echo $output;
+    }
+
+    function email_admin() {
+        $email_admin = get_option(LimitMaxIPsPerUser::$email_admin_key);
+        $checked = (isset($email_admin) && $email_admin == 1) ? 1 : 0;
+    
+        $html = '<input type="checkbox" id="limit_max_ips_per_user_email_admin" name="limit_max_ips_per_user_email_admin" value="1"' . checked(1, $checked, false) . '/>';
+        $html .= '<label for="limit_max_ips_per_user_email_admin">Email Admin on Blocked Logins</label>';
+    
+        echo $html;
+    }
+
+    function email_user() {
+        $email_user = get_option(LimitMaxIPsPerUser::$email_user_key);
+        $checked = (isset($email_user) && $email_user == 1) ? 1 : 0;
+    
+        $html = '<input type="checkbox" id="limit_max_ips_per_user_email_user" name="limit_max_ips_per_user_email_user" value="1"' . checked(1, $checked, false) . '/>';
+        $html .= '<label for="limit_max_ips_per_user_email_user">Email User on Blocked Logins</label>';
+    
+        echo $html;
     }
 
     /**
@@ -380,12 +406,14 @@ final class LimitMaxIPsPerUser {
         }
 
         if (!$user) {
-          // Not logged in
+            // Not logged in
             return;
         }
 
         $number_of_days = get_option(self::$number_of_days_option_key);
         $max_ips = get_option(self::$max_ips_option_key);
+        $email_admin = get_option(self::$email_admin_key);
+        $email_user = get_option(self::$email_user_key);
         $number_of_unique_ips = $this->get_ip_count($user->ID, $number_of_days);
 
         $blocked = false;
@@ -403,6 +431,27 @@ final class LimitMaxIPsPerUser {
         if ($blocked) {
             // Log the user out
             wp_clear_auth_cookie();
+
+            // Email admin if setting is enabled
+            if ($email_admin) {
+                $to = get_option('admin_email');
+                $site_name = get_bloginfo('name');
+                $subject = "{$site_name}: Max Login IPs exceeded for {$user->user_login}";
+                $user_link = admin_url('user-edit.php?user_id='. $user->ID, 'http');
+                $message = "Dear Admin,<br><br>This is a notification to let you know user <a href='{$user_link}'>{$user->user_login}</a> ({$user->user_email}) has exceeded their max login IPs allowed for {$site_name}.<br><br>Note: You can disable this email in your WordPress plugin settings page for <em>Limit Max IPs Per User</em>.";
+                $headers = array('Content-Type: text/html; charset=UTF-8');
+                wp_mail($to, $subject, $message, $headers);
+            }
+
+            // Email user if setting is enabled
+            if ($email_user) {
+                $to = $user->user_email;
+                $site_name = get_bloginfo('name');
+                $subject = "{$site_name}: Max Login IPs exceeded for {$user->user_login}";
+                $message = "Dear {$user->user_login},<br><br>This is a notification to let you know you have exceeded the max login IPs allowed for {$site_name}.";
+                $headers = array('Content-Type: text/html; charset=UTF-8');
+                wp_mail($to, $subject, $message, $headers);
+            }
 
             // Build login URL and then redirect
             $login_url = site_url( 'wp-login.php', 'login' );

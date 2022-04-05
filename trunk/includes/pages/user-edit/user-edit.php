@@ -29,7 +29,7 @@
 
                 <p>
                     <div id="limit-max-ips-per-user-ajax-response"></div>
-                    <button type="button" id="delete-ip-records" class="button" onclick="javascript:return confirm('Are you sure you want to delete this user\'s login IP records? Please note this action cannot be reversed.');">Clear User's Recorded IPs</button>
+                    <button type="button" id="delete-ip-records" class="button">Clear User's Recorded IPs</button>
                 </p>
 
                 <p class="description">
