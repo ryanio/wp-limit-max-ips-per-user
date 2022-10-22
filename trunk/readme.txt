@@ -3,7 +3,7 @@ Contributors: ralxz
 Donate link: https://www.paypal.me/ryanghods
 Tags: limit, IPs, max, user, security, membership, restrict
 Requires at least: 4.6
-Tested up to: 5.9.1
+Tested up to: 6.0
 Stable tag: trunk
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,7 +26,6 @@ Features:
 1. Activate the plugin through the 'Plugins' screen in WordPress.
 1. Use the Settings->Limit Max IPs Per User screen to configure the plugin.
 
-
 == Frequently Asked Questions ==
 
 1. **What versions of WordPress, PHP and MySQL does this plugin support?**
@@ -42,6 +41,15 @@ Features:
 
 == Changelog ==
 
+= 1.5 =
+* Small bug fix for other plugins to be able to show data in the user table. Thanks @odoremieux!
+
+= 1.4 =
+* Additional bug fix for counting unique IPs on login
+
+= 1.3 =
+* Bug fix for counting unique IPs on login
+
 = 1.2 =
 * New feature: enable admin or user email notifications when limit exceeded.
 
@@ -53,7 +61,16 @@ Features:
 
 == Upgrade Notice ==
 
-= 1.2=
+= 1.5 =
+* Small bug fix for other plugins to be able to show data in the user table. Thanks @odoremieux!
+
+= 1.4 =
+* Additional bug fix for counting unique IPs on login
+
+= 1.3 =
+* Bug fix for counting unique IPs on login
+
+= 1.2 =
 * New feature: enable admin and user email notifications when limit exceeded.
 
 = 1.1 =

@@ -3,7 +3,7 @@
  * Plugin Name: Limit Max IPs Per User
  * Plugin URI:  https://github.com/ryanio/wp-limit-max-ips-per-user
  * Description: Limit the maximum number of IPs that a user can log in with.
- * Version:     1.2
+ * Version:     1.5
  * Author:      Ryan Ghods
  * Author URI:  https://ryanio.com 
  * License:     GPL2
@@ -72,12 +72,9 @@ final class LimitMaxIPsPerUser {
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
     }
 
-    /**
-    *
+   /**
     * Activate / deactivate / uninstall
-    *
     */
-
     function activate() {
         if (!current_user_can('activate_plugins')) {
             return;
@@ -137,12 +134,9 @@ final class LimitMaxIPsPerUser {
         $wpdb->query($sql);
     }
 
-    /**
-    *
+   /**
     * Scheduled events 
-    *
     */
-
     function schedule_events() {
         $number_of_days = get_option(self::$number_of_days_option_key);
 
@@ -174,12 +168,9 @@ final class LimitMaxIPsPerUser {
         $wpdb->query($sql);
     }
 
-    /**
-    *
+   /**
     * Create db
-    *
     */
-
     function create_db() {
         global $wpdb;
         $table_name = self::$table_name;
@@ -209,12 +200,11 @@ final class LimitMaxIPsPerUser {
         update_option(LimitMaxIPsPerUser::$db_ver_option_key, $this->db_ver);
     }
 
-    /**
+   /**
     * Checks if the installed database version is the same
     * as the db version of the current plugin and if upgrade is required
     * calls the version specific db upgrade function
     */
-
     function update_db_check() {
         if (get_option(LimitMaxIPsPerUser::$db_ver_option_key) != $this->db_ver) {
             switch($this->db_ver) {
@@ -229,24 +219,18 @@ final class LimitMaxIPsPerUser {
         }
     }
 
-    /**
-    *
+   /**
     * DB version-specific updates
-    *
     */
-
     function db_update_1_1() {
     }
 
     function db_update_1_2() {
     }
 
-    /**
-    *
+   /**
     * Register settings, sections, and field
-    *
     */
-
     function admin_init() {
         // Register a new section in setting
         add_settings_section('limit_max_ips_per_user_section', 'Settings', array($this, 'limit_max_ips_per_user_callback'), 'limit_max_ips_per_user_settings');
@@ -353,12 +337,9 @@ final class LimitMaxIPsPerUser {
         echo $html;
     }
 
-    /**
-    *
+   /**
     * Enqueue scripts
-    *
     */
-
     function admin_enqueue_scripts($hook) {
         if ($hook == "settings_page_limit_max_ips_per_user") {
             wp_enqueue_style('wp_admin_settings_css', plugins_url('includes/pages/settings/settings.css', __FILE__));
@@ -375,12 +356,9 @@ final class LimitMaxIPsPerUser {
         }
     }
 
-    /**
-    *
+   /**
     * Settings page HTML
-    *
     */
-
     function limit_max_ips_per_user_settings_page() {
        // Check user capabilities
         if (!current_user_can('manage_options')) {
@@ -392,14 +370,11 @@ final class LimitMaxIPsPerUser {
         include('includes/pages/settings/settings.php');
     }
 
-    /**
-    *
+   /**
     * User login:
     * Record login IP and check to see
     * if user should be logged out if blocked
-    *
     */
-
     function user_login($user_login, $user = null) {
         if (!$user) {
             $user = get_user_by('login', $user_login);
@@ -417,6 +392,11 @@ final class LimitMaxIPsPerUser {
         $number_of_unique_ips = $this->get_ip_count($user->ID, $number_of_days);
 
         $blocked = false;
+
+        $ip = $this->get_user_ip();
+        if ($this->is_unique_ip($user->ID, $ip, $number_of_days)) {
+            $number_of_unique_ips++;
+        }
 
         if ($number_of_unique_ips > $max_ips) {
             $blocked = true;
@@ -461,12 +441,9 @@ final class LimitMaxIPsPerUser {
         }
     }
 
-    /**
-    *
+   /**
     * Show a notice to users who try to login and are disabled
-    *
     */
-
     function user_login_message($message) {
         // Show the error message if it seems to be a disabled user
         if (isset($_GET['blocked'] ) && $_GET['blocked'] == 1) { 
@@ -476,12 +453,9 @@ final class LimitMaxIPsPerUser {
         return $message;
     }
 
-    /**
-    *
+   /**
     * Record user login in db
-    *
     */
-
     function record_user_login($user, $user_login, $blocked) {
         $ip = $this->get_user_ip();
 
@@ -519,13 +493,9 @@ final class LimitMaxIPsPerUser {
         return $ip;
     }
 
-
-    /**
-    *
+   /**
     * Get queries
-    *
-    */ 
-
+    */
     function get_log() {
         global $wpdb;
         $table_name = self::$table_name;
@@ -558,6 +528,25 @@ final class LimitMaxIPsPerUser {
         return $count;
     }
 
+    function is_unique_ip($user_id = null, $ip = null, $number_of_days = null) {
+        global $wpdb;
+        $table_name = self::$table_name;
+
+        $sql = "SELECT COUNT(*) FROM {$wpdb->prefix}{$table_name}";
+
+        if ($user_id) {
+            $sql .= " WHERE user_id = {$user_id} AND ip = '{$ip}'";
+        }
+
+        if ($number_of_days) {
+            $sql .= " AND time > DATE_SUB(CURDATE(), INTERVAL {$number_of_days} DAY)";
+        }
+
+        $count = $wpdb->get_var($sql);
+
+        return $count == 0;
+    }
+
     function get_last_ip_record($user_id) {
         global $wpdb;
         $table_name = self::$table_name;
@@ -576,12 +565,9 @@ final class LimitMaxIPsPerUser {
         }
     }
 
-    /**
-    *
+   /**
     * Delete records
-    *
     */
-
     function admin_post_delete_records() {
         // Verify nonce
         $nonce = isset($_REQUEST['_wpnonce']) ? $_REQUEST['_wpnonce'] : false;
@@ -632,12 +618,9 @@ final class LimitMaxIPsPerUser {
         return $wpdb->query($sql);
     }
 
-    /**
-    *
+   /**
     * Edit user profile
-    *
     */
-
     function edit_user_profile($user) {
         $number_of_days = get_option(self::$number_of_days_option_key);
         $number_of_unique_ips = $this->get_ip_count($user->ID, $number_of_days);
@@ -686,12 +669,9 @@ final class LimitMaxIPsPerUser {
         wp_die();
     }
 
-    /**
-    *
+   /**
     * User list - custom columns
-    *
     */
-
     function manage_users_columns($defaults) {
         $number_of_days = get_option(self::$number_of_days_option_key);
         $day_string = $number_of_days == 1 ? 'day' : 'days';
@@ -699,7 +679,7 @@ final class LimitMaxIPsPerUser {
         return $defaults;
     }
 
-    function manage_users_custom_column($empty, $column_name, $user_id) {
+    function manage_users_custom_column($output, $column_name, $user_id) {
         if ($column_name == 'limit_max_ips_per_user_unique_ip_count') {
             $number_of_days = get_option(self::$number_of_days_option_key);
             $count = $this->get_ip_count($user_id, $number_of_days);
@@ -711,15 +691,13 @@ final class LimitMaxIPsPerUser {
 
             return $count;
         }
+        return $output;
     }
 }
 
 /**
-*
-* Let's go!
-*
-*/
-
+ * Let's go!
+ */
 $limit_max_ips_per_user = new LimitMaxIPsPerUser();
 register_activation_hook(__FILE__, array(&$limit_max_ips_per_user, 'activate'));
 register_uninstall_hook(__FILE__, array('LimitMaxIPsPerUser', 'uninstall'));
